@@ -58,7 +58,7 @@ type (
 		Become            bool
 		BecomeMethod      string
 		BecomeUser        string
-	}
+		BecomePassFile	  string
 
 	Plugin struct {
 		Config Config
@@ -374,6 +374,10 @@ func (p *Plugin) ansibleCommand(inventory string) *exec.Cmd {
 
 	if p.Config.BecomeUser != "" {
 		args = append(args, "--become-user", p.Config.BecomeUser)
+	}
+
+	if p.Config.BecomePassFile != "" {
+		args = append(args, "--become-password-file", p.Config.BecomePassFile)
 	}
 
 	if p.Config.Verbose > 0 {
