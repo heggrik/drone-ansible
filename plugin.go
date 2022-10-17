@@ -58,7 +58,8 @@ type (
 		Become            bool
 		BecomeMethod      string
 		BecomeUser        string
-		BecomePassFile	  string
+		BecomePassFile    string
+	}
 
 	Plugin struct {
 		Config Config
@@ -88,6 +89,14 @@ func (p *Plugin) Exec() error {
 		}
 
 		defer os.Remove(p.Config.VaultPasswordFile)
+	}
+
+	if p.Config.BecomePassFile != "" {
+		if err := p.becomePass(); err != nil {
+			return err
+		}
+
+		defer os.Remove(p.Config.BecomePassFile)
 	}
 
 	commands := []*exec.Cmd{
@@ -170,6 +179,25 @@ func (p *Plugin) vaultPass() error {
 	}
 
 	p.Config.VaultPasswordFile = tmpfile.Name()
+	return nil
+}
+
+func (p *Plugin) becomePass() error {
+	tmpfile, err := ioutil.TempFile("", "becomePass")
+
+	if err != nil {
+		return errors.Wrap(err, "failed to create become password file")
+	}
+
+	if _, err := tmpfile.Write([]byte(p.Config.BecomePassFile)); err != nil {
+		return errors.Wrap(err, "failed to write become password file")
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		return errors.Wrap(err, "failed to close become password file")
+	}
+
+	p.Config.BecomePassFile = tmpfile.Name()
 	return nil
 }
 
